@@ -1,0 +1,2 @@
+1. Read S3 FAQs
+2. Experiment using S3 select

@@ -1,0 +1,25 @@
+As of Dec 2018
+19 Regions
+57 AZs
+
+Each region - 2 or more AZs - Physical location in the world
+AZ - one or more discrete data centers
+Edge locations - aws endpoints used for caching content, typically CloudFront, amazon's CDN
+As of 2018, there are more than 150 edge locations
+
+Core Services:
+Compute
+Storage
+DBs
+Network and content delivery
+Security, Identity and compliance
+
+AWS Organizations and Consolidated Billing
+	Multiple organizations and centrally manage them
+	Takes into account aggregates of all linked accounts
+	The more you use AWS the less you pay, so it is beneficial to consolidate accounts. Volume pricing discount
+
+	Service control policies
+		Restrict services to OUs or accounts
+
+	Paying account for billing purposes only, don't deploy resources into paying account

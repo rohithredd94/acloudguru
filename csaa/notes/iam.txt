@@ -1,0 +1,10 @@
+Centralized control, shared access, granular permissions, external auth support(AD etc.,), MFA, temp access, password rotation policy
+
+Users, groups, policies, roles(assign to AWS resources)
+
+IAM is univeral, no region
+
+Access key ID and secret key - Only AWS CLI and API
+Username and password - only management console
+
+Power User - Access to all AWS services except the management of groups and users within IAM.

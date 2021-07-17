@@ -1,0 +1,229 @@
+simple storage service
+
+Object based storage
+0 bytes to 5TB
+Unlimited storage
+Files stored in buckets
+
+Universal namespace
+Global view but buckets can be created in individual regions
+You can change storage classes and encryption settings on the fly
+
+HTTP 200 code if upload is successful
+
+Objects:
+	Key - Name of the file
+	Value - Simply the data
+	Version ID - Able to do version control
+	Metadata - Data about date you are storing
+	Subresouces
+		ACLs
+		Torrents
+
+Supports MFA delete
+
+Data consistency:
+	Read after write consistency for PUTS of new objects - Upload a file to S3, read it immediately
+	Eventual consistency for overwrite PUTS and DELETES(takes some time to propagate) - This means if you upload a new version of file, the instant read after the operation might still retrive an older version but after sometime(probably a second or two) it will get the updated version
+
+Guarantees:
+	built for 99.99% availability
+	guarantees 99.9%
+	99.99999999999% durability
+
+Storage Classes:
+All tiers have 99.99999999999% durability
+	S3 Standard:
+		99.99% availability
+		99.99999999999% durability
+		designed to sustain loss of 2 facilities concurrently
+		First 50TB/month - $0.023/GB
+		Next 450TB/month - $0.022/GB
+		Over 500TB/month - $0.021/GB
+	S3 - IA: Infrequent access
+		Lower fee than s3 but charged a retrieval fee(How much is this?)
+	S3 One Zone - IA: Previously S3 RRS, reduced redundancy storage
+		No multiple AZ data resilience
+		Cost - $0.01/GB
+	S3 - Intelligent Tiering:
+		Optimizing costs by automatically moving data across tiers, uses machine learning
+		Infrequent access tier costs($0.0125/GB) are roughly half of frequent access but comes with additional monitoring and automation cost($0.0025/1000 objects)
+	S3 Glacier:
+		Archival purposes
+		Secure, durable and low cost
+		Retrieval from minutes to hours
+		Cost - $0.004/GB
+	S3 Glacier Deep Archive
+		Lowest cost where data retrieval takes 12 hours
+		Cost - $0.00099/GB
+
+Costs:
+	Storage - How much data is stored
+	Requests - How much data is accessed
+	Storage management - Based on tiers
+	Data Transfer pricing
+	Transfer acceleration - Fast, easy and secure transfer over logn distances between bucker location and end users, uses aws cloudfront edge location. If turned on, files are uploaded to edge location to speed up transfers
+	Cross region replication - Bucket in Region 1, replicate to another bucket in Region 2
+
+By default public access is blocked
+
+Restricting bucket access - Security:
+	Bucket policies - bucket level
+	Object policies - individual object level
+	IAM policies to Users and Groups - User and group level
+	Can be configured to create access logs which log all requests made to bucket. These can be written another bucket.
+
+Encryption:
+	Encryption in transit:
+		SSL/TLS
+	Encryption at rest(server side):
+		S3 Managed Keys - SSE-S3
+		AWS KMS, Managed Keys - SSE-KMS
+		Customer provided keys - SSE-C
+	Client side encryption
+	Can edit encryption on individual object level or a global bucket level
+
+Versioning:
+	Versioning cannot be disabled, only suspend. Existing versions can only be deleted individually
+	Integrates with life cycle rules
+	MFA delete capability
+
+	Each version needs to be made public individually
+
+	Delete just hides the objects
+
+Lifecycle rules:
+	Can limit scope using file prefixes or apply to all objects
+	Transition needs to be in storage classes order described above
+	Can be used in conjunction with versioning
+
+S3 Object Lock:
+	Store objects using WORM, write once read many
+	Prevent objects from being deleted or modified for a specific time or indefinitely
+
+	Governance Mode:
+		Users can't overwrite or delete or alter lock settings unless the user has special permissions
+	Compliance Mode:
+		A protected object version can't be overwritten or deleted by any user, even root user. For the duration of retention period. And retention period can't be shortened
+	S3 stores expiration timestamp in metadata
+
+	Legal Hold:
+		Legal hold prevents an object version from being overwritten or deleted. But has no retention period and in effect until removed
+		Freely placed and removed by users with s3:PutObjectLegalHold permission
+
+Glacier Vault Lock:
+	Deploy and enforce compliance controls for individual S3 glacier vaults with Vault Lock policy(such as WORM)
+	Lock objects inside glacier
+	Policy can be locked and once locked cannot be changed
+
+S3 Performance:
+	S3 Prefix:
+		mybucketname/folder1/subfolder1/file1.ext -> /folder1/subfolder1 -> This is the prefix
+		3500 PUT/COPY/POST/DELETE per second per prefix
+		5500 GET/HEAD per second per prefix
+		Better performance by spreading across different prefixes
+
+	If using SSE-KMS, keep in mind KMS limits
+	Upload calls GenerateDataKey in KMS API
+	Download calls Decrypt in KMS API
+
+	Uploading/Downloading will count toward KMS quota. Quota is region specific(either 5500, 10000 or 30000 per second) and this cannot be increased
+
+	Multipart Uploads:
+		Recommeneded for files over 100MB
+		Required for over 5GB
+		Parallelize uploads, splits into parts and uploads in parts
+
+	S3 Byte Range fetches:
+		Parallelize downloads by specifying byte ranges
+
+S3 Select:
+	Retrieve only subset of data using simple SQL expressions
+	Upto 400% faster and 80% cheaper
+	Get data by rows or columns using SQL expressions
+
+Glacier Select:
+	Run SQL queries against Glacier directly
+
+Cross account access:
+	Bucket policies and IAM - Programmatic access only
+	Bucket ACLs and IAM - Programmatic access only
+	Cross account IAM roles - Programmatic and console access
+
+Cross Region Replication:
+	Versioning required on both source and destination buckets
+	Doesn't do it for existing objects, only for new objects
+	Now public permission from source also replicates to destination
+	Delete markers are not replicated by default. Option in configuration to do so.
+
+AWS DataSync:
+	Move large amount of data to AWS from On prem data center
+	Uses DataSync Agent
+	S3, AWS EFS, Amazon FSx for Windows - NFS/SMB
+	Hourly, daily or weekly
+	Can also be used to replicate EFS to EFS
+
+CloudFront:
+	Content Delivery System
+	Edge Location - Where content will be cached
+	Origin - Origin of all files. S3 Bucket, EC2 Instance, ELB, Route53
+	Distribution - Name given to CDN
+	If edge does not have the data, it will download from origin and store for however long as configured, time to live(TTL).
+	This becomes really usefull for the next user who needs that data.
+	Cached objects can be cleared but you will be charged
+	You can also upload to edge locations
+
+	Web Distribution - For websites
+	RTMP - Adobe Flash Media Streaming - This has been discontinued on Dec 31, 2020
+
+	Cannot see two types now, directly goes to config page
+
+	Signed URLs and Cookies:
+		Signed URL is for individual files. 1 file = 1 URL
+		Signed cookie is for multiple files. 1 cookie - multiple cookies
+
+		Attach a policy:
+			URL Expiration
+			IP Ranges
+			Trusted Signers (which AWS accounts can create signed URLs)
+
+		Uses OAI, origin access ...
+
+		Client -> Auth > Application <--> use SDK to generate signed URL <--> CloudFront <--> S3
+
+		Generation of signed URL is key paid and managed by root user
+
+S3 Signed URL:
+	Issues a request as the IAM user who creates the presigned URL
+	Limited lifetime
+
+If users can access S3 then it is S3 signed URL, else if using OAI it is cloudfront signed URL
+If origin is EC2, then use cloudfront
+
+Snowball:
+	Petabyte scale data transport solution. Import/Export.
+	50TB or 80TB
+	Snowball edge - 100TB, onboard storage and compute capabilities. Can cluster together
+	Snowmobile - Exabyte scale data transfer. 100PB. Semi truck.
+
+Storage Gateway:
+	Connets on-prem software appliance with cloud based storage
+	Available for download as a VM image. Supports VMWare ESXi and MS Hyper-V
+	File Gateway - NFS/SMB - Flat files, stored directly on S3
+	Volume Gateway - iSCSI - 
+		Stored Volumes - Store primary data locally, backing up that data to AWS in the form of EBS volumes. 1GB-16TB volume sizes
+		Cached volumes - Uses S3, most frequently accessed data. Upto 32TB and attach them as iSCSI devices. 1GB-32TB volume sizes
+	Tape Gateway - VTL - Virtual Tape Library - Durable cost-effective to archive data in AWS
+
+Athena:
+	Interactive query service which enables you to analyse and query data located in S3 using standard SQL.
+	Serverless, nothing to provision, pay per query/per TB scanned
+	Query log files stored in S3
+	Generate business reports on data stored in S3
+
+Macie:
+	Discover PII - Personally identifiable information
+	Home address, Email, SSN, DL etc.,
+	Uses ML and NLP to discover, classift and protect sensitive data stored in S3
+	Great for PCI-DSS
+	Can also analyze CloudTrail logs
