@@ -220,6 +220,7 @@ Athena:
 	Serverless, nothing to provision, pay per query/per TB scanned
 	Query log files stored in S3
 	Generate business reports on data stored in S3
+	Data Formats: JSON, Apache ORC, Apache Parquet
 
 Macie:
 	Discover PII - Personally identifiable information
