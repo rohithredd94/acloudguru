@@ -20,6 +20,9 @@ Resizable compute capacity in the cloud:
 	FIGHTDRMCPXZAU
 
 	Root device volumes can now be encrypted. Unencrypted root volumes can also be later encrypted using a third party tool(such as bit locker etc)
+	Hypervisors:
+		Xen
+		Nitro
 
 Security Group rule changes take effect immediately
 For SGs all inbound traffic is blocked by default and all outbound traffic is allowed by default.
@@ -215,3 +218,10 @@ AWS WAF:
 		Length of request
 		Presence of SQL Code - SQL Injection
 		Presence of malicious script - Cross site scripting
+
+When can you attach/replace an IAM on an EC2 instance?
+Attach - Stopped/Running
+Replace - Running
+
+Standard Reserved Instances cannot be moved between regions
+You can't delete a snapshot of the root device of an EBS volume used by a registered AMI.
