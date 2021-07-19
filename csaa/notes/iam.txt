@@ -8,3 +8,122 @@ Access key ID and secret key - Only AWS CLI and API
 Username and password - only management console
 
 Power User - Access to all AWS services except the management of groups and users within IAM.
+
+AWS Directory Service:
+	Family of managed services
+	Connect AWS resources with on-prem AD
+	Standalone directory in the cloud
+	Use existing corporate creds
+	SSO to any domain-joined EC2 instance
+
+	Active Directory:
+		On-prem directory service
+		Hierarchical database of users, groups computers - trees and forests
+		Group policies
+		Based on LDAP and DNS
+		Supports Kerberos, LDAP and NTLM auth
+		Highly available
+
+	AWS Managed Microsoft AD:
+		AD domain controllers running Windows Server
+		Reachable by apps in your VPC
+		Add DCs for HA and perf
+		Exclusive access to DCs
+		Extend existing AD to on-prem using AD Trust
+
+		AWS responsibility:
+			Multi AZ deployment
+			Patch, monitor, recover
+			instance rotation
+			Snapshot and restore
+		Customer responsibility:
+			Users, groups, GPOs,
+			Standard AD tools
+			Scale DCs
+			Trusts
+			Certificats Authorities(LDAPS)
+			Federation
+
+	Simple AD:
+		Standalone managed directory with basic AD features
+		Small <= 500 users
+		Large <= 5000 users
+		Easier to manage EC2
+		Linux workloads that need LDAP
+		Does not support trusts(no on-prem AD support)
+
+	AD Connector:
+		Directory gateway for on-prem AD
+		Avoid caching info in the cloud
+		Allow on-prem users to login to AWS using AD
+		Join EC2 instances to existing AD domain
+		Scale across multiple AD connectors
+
+	Cloud Directory: - Not AD compatible
+		Directory based store for developers
+		Fully managed
+
+	Amazon cognito user pools: - Not AD compatible
+		Nothing to do with any of the above
+		Managed user directory for SaaS apps
+		Signup/Signin for web or mobile
+		Works with social media identities - Typically usage
+
+IAM Policies:
+	Amazon resource name(ARN):
+		Uniquely identifies any resource in AWS
+		arn:partition:service:region:account_id:
+
+		Partition: aws|aws-cn
+		Service: s3|ec2|rds|...
+		Region: us-east-1|us-west-1|...
+		account_id: The 12 digit account id
+
+		And end with:
+			resource
+			resource_type/resource
+			resource_type/resource/qualifier
+			resource_type/resource:qualifier
+			resource_type:resource
+			resource_type:resource:qualifier
+	Policies:
+		Identity Policy - Attached to user/group/role
+		Resource Policy - Attached to resources. Who has access to resource and what actions they can perform on it
+		List of statements(each one matches AWS API Request)
+
+		Effect in policy is either "Allow" or "Deny"
+
+		Inline Policy - Scope is limited to only this role
+
+		Not explicity denied == implicitly denied
+		Explicit deny > everything else
+
+	Permission Boundaries:
+		Used to delegate administration to other users
+		Prevent privilege escalation or unnecessarily broad permissions
+		Control maximum permission an IAM policy can grant
+
+AWS Resource Access Manager (RAM):
+	Allows resource sharing between accounts
+	Resources allowed for sharing:
+		App Mesh
+		Aurora
+		Code Build
+		EC2
+		EC2 Image Builder
+		License Manager
+		Resource Groups
+		Route 32
+
+	Scenarios:
+		Launch EC2 instances in a shared subnet
+
+AWS Single Sign On (SSO):
+	Centrally manage access to AWS accounts and business applications
+	Use existing corporate identities
+
+	Granular Account-Level Permissions:
+		Example:
+			For a set of users(say security analysts) grant Admin Access to Account A, Audit Access to Account B and C
+
+	Supports AD and SAML 2.0 integration
