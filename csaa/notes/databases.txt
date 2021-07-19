@@ -1,0 +1,188 @@
+Relational DBs(RDS):
+	SQL Server - No Read Replicas support
+	Oracle
+	MySQL
+	PostgreSQL
+	Aurora - No Multi-AZ support but by design this is extremely fault tolerant
+	MariaDB
+
+	SQL Server Max Sizes
+		GP SSD - 16TB
+		Prov IOPS - 16TB
+		Magnetic - 1TB
+
+	Runs on VMs but cannot login to these systems
+	Fully managed - AWS takes care of all software patching
+
+	Backups:
+		Automated Backups:
+			Recover your DB to any point in time with in the retention period(1-35 days)
+			Full daily snapshot and also store transaction logs throughout the dat
+			Enabled by default and stored in s3(Free storage space equal to size of database)
+		Database Snapshots:
+			Manually
+			Stored even after DB is deleted
+		Restored version of db will be a new RDS instance with a new endpoint
+	Encryption at rest is supported for all
+
+	Multi-AZ - Disaster Recovery
+		AWS takes care of failure to secondary instance
+		Synchronously repliactes all changes to DB in a different AZ
+		Can force failure by rebooting the instance
+	Read Replicas - Performance
+		This is really useful to manage heavy readonly traffic
+		Can also have read replicas of read replicas(Watch for replication latency)
+		Replicas can be promoted to a standalone database
+		Must have automatic backups turned on
+		Upto max 5 read replicas
+		Replicas can be in another region
+		No automatic failover, this would need to be manual
+	MultiAZ and Read replicas can be combined
+
+	Amazon Aurora:
+		MySQL PostgreSQL compatible
+		5 times better than MySQl and 3 times better than PostgreSQL
+		Starts with 10GB, scales in 10GB increments upto 64TB
+		Resources scale upto 32vCPUs and 244GB memory
+		2 copies of your data in each AZ with a min of 3 AZs, total 6 copies of data
+		Transparently handles loss of upto 2 copies of data without affecting write availability and upto 3 copies without affecting read availability
+		Self healing. Data blocks are scanned for error and repaired automatically
+		Upto 15 read replicas(MySQL 5 replicas and PostgreSQL 1 replica):
+			millisecond latency with no impact on performance
+			only inregion replicas
+			automatic replica failover
+			No support for user-defined replication delay
+			No support for different data/schema in replica vs primary
+
+		Can share snapshots with other AWS accounts
+
+		Serverless:
+			Simple, cost-effective option for in-frequent, intermittent or unpredictable workloads
+			Pay for invocation
+
+Non relational databases, NoSQL/JSON
+	DynamoDB - FUlly managed
+	Consistent, single-digit millisecond latency
+	Supports document and key-value data models
+	Stored on SSD storage
+	Spread across 3 geo distant datacenters
+	Eventual Consistent Reads(default): Best read performance
+		Consistency across all copies within a second
+	Strongly Consistent Reads:
+		Read data instantly(1 second or less)
+	All data is encrypted at test using KMS
+
+	DynamoDB Accelerator(DAX):
+		Fully managed, HA, in-memory cache
+		10x performance
+		Request time from milliseconds to microseconds - even under load
+		No need to manage caching logic
+		Also has write through cache
+
+	Supports transactions
+
+	On-Demand Capacity:
+		Pay-per-request pricing
+		Balance cost and performance - DynamoDB adapts based on load
+		No minimum capacity
+		No charge for read/write - only storage and backups
+		Pay more per request than with provisioned capacity
+		usefull in cases where the load estimate is not available
+
+	Backup and Restore:
+		On Demand:
+			Full backups at any time
+			Zero impact on performance and availability
+			Consistent within seconds
+			Same region as source table, no cross region
+		Point in time recovery:
+			Protect against accidental writes or deletes
+			Any point in last 35 days
+			Incremental backups
+			not enabled by default
+			Latest recoverable: 5 minutes in the past
+
+	Streams:
+		Time ordered sequence of item level changes in table - FIFO
+		Stores inserts,updates and deletes for the last 24 hours
+		Multiple stream records are grouped into shard. Entire shard is removed after 24 hours.
+		Combine with Lambda functions for functionality like stored procedures
+
+	Global tables:
+		Managed multi-master, multi-region replication
+		Global distributed applications
+		based on dynamodb streams
+		Multi-region for DR and HA
+		Replication latency under 1 second
+
+		Replicas need capacity to be either pay-per-request(on-demand) or autoscaled write capacity. Doesn't seem to work with provisioned capacity.
+
+Data Warehousing:
+	Redshift
+	Ex: Cognos, Jaspersoft
+	Pull in very large and complex data sets.
+	Start at $0.25 per hour
+	Scale upto petabyte an hour
+	Configuration:
+		Single Node - 160Gb
+		Multi-Node:
+			Leader Node and Compute Node(upto 128 nodes)
+	Column based compression as much of column data can be same
+	Comes with massive parallel processing
+	Backups:
+		Enabled by default with 1 day retention period(max 35 days)
+		Always tries to maintain atleast 3 copies of data
+		Async replication to S3 in another region for DR
+
+	Pricing is based on compute node hours(no leader node charges)
+	Encrypted in transit using SSL
+	Encrypted at rest using AES-256 using KMS
+	Currently available only in 1 AZ
+
+
+OLTP vs OLAP
+	OLTP - Online transaction processing
+		Find specific data
+	OLAP - Online analytics processing
+		Pulls in large number of records. Aggregate data.
+
+	Ideally there would need to be different databases of OLTP and OLAP
+
+Elasticache:
+	In memory cache in the cloud
+	Usefull when you don't want to overload the databases
+	Engines: Both are simple caches and can scale horizontally
+		Memcached - multi-threaded performance
+		Redis - advanced datatypes, ranking/sorting, pub/sub, persistence, multi-az, backup/restore
+
+Database Migration Service(DMS):
+	Source: On-prem, EC2 or RDS(including SAP, MongoDB, Db2, Azure SQL), S3
+	Target: On-prem, EC2, RDS(including SAP, MongoDB, Db2, Azure SQL), DynamoDB,  Redshift, S3, Elastic search service, Kinesis Data Streams, Document DB
+
+	Server(EC2) in AWS cloud that runs replication software
+	Schedules tasks that runs on this server to move your data
+	Pre-create target tables manually or use AWS schema conversion tool to create the required table data(tables, views, triggers etc.,) - Need SCT for heterogenous migrations
+
+	Homogenous and heterogenous Migrations
+
+Caching strategies on AWS:
+	CloudFront - at edge locations
+	API Gateway
+	Elasticache
+	DynamoDB Accelerator(DAX)
+	Strategies:
+		Option 1: User -> CloudFront -> Origin(S3, EC2, etc.,)
+		Option 2: User -> CloudFront -> API Gateway -> Lambda/EC2 -> Elasticache or RDS or DynamoDB - This is probably more common in real life
+
+Elastic Map Reduce(EMR):
+	Cloud big-data platform for processing using Apache Spark, Hive, HBase, Flink, Hudi, Presto.
+	Cluster of EC2 instances
+	Each node has a role within the cluster. EMR install different software(like hadoop) on each node
+
+	Master Node: Manages the cluster. Tracks the status of the tasks and monitors the health. This node is mandatory.
+	Core Node: Node with software components that runs tasks and stores data in HDFS. Multi node clusters have atleast one core node
+	Task Node: Node with software components that runs tasks but DOES NOT store data in HDFS. These are optional.
+	Each node can communicate with each other
+
+	If you lose master node, you will lose master node.
+		Configure to periodically archive log files to S3 from master node. Archives at 5 minute intervals. Can only be done during initial cluster setup.
