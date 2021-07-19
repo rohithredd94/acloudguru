@@ -1,0 +1,69 @@
+
+Dev s3 bucket name = cfst-3035-53e7a215317827f937cd68dc484-s3bucketdev-7uwmjfyrjkcd
+
+Prod s3 bucket name = cfst-3035-53e7a215317827f937cd68dc48-s3bucketprod-126h31702z0mk
+
+Engineering s3 bucket name = cfst-3035-53e7a215317827f937c-s3bucketengineering-jry2nsxep9pd
+
+Secret s3 bucket name = cfst-3035-53e7a215317827f937cd68dc-s3bucketsecret-11em3ha9i3esl
+
+"Arn": "arn:aws:iam::171380319580:policy/DevS3ReadAccess",
+
+Notes:
+First create an empty IAM role(DEV_ROLE) with only ec2 as trust entity
+trust_policy_ec2.json contents:
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {"Service": "ec2.amazonaws.com"},
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+Command: aws iam create-role --role-name DEV_ROLE --assume-role-policy-document file://trust_policy_ec2.json
+
+Now create a new policy with read access(DevS3ReadAccess) to s3
+dev_s3_read_access.json contents:
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "AllowUserToSeeBucketListInTheConsole",
+            "Action": [
+                "s3:ListAllMyBuckets",
+                "s3:GetBucketLocation"
+            ],
+            "Effect": "Allow",
+            "Resource": [
+                "arn:aws:s3:::"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:Get*",
+                "s3:List*"
+            ],
+            "Resource": [
+                "arn:aws:s3:::cfst-3035-53e7a215317827f937cd68dc484-s3bucketdev-7uwmjfyrjkcd/*",
+                "arn:aws:s3:::cfst-3035-53e7a215317827f937cd68dc484-s3bucketdev-7uwmjfyrjkcd"
+            ]
+        }
+    ]
+}
+Command: aws iam create-policy --policy-name DevS3ReadAccess --policy-document file://dev_s3_read_access.json
+
+Attach this policy to DEV_ROLE IAM role
+Command: aws iam attach-role-policy --role-name DEV_ROLE --policy-arn "arn:aws:iam::171380319580:policy/DevS3ReadAccess"
+Command: aws iam list-attached-role-policies --role-name DEV_ROLE
+
+Create a new instance profile DEV_PROFILE
+Command: aws iam create-instance-profile --instance-profile-name DEV_PROFILE
+
+Attach above IAM role(DEV_ROLE) to this instance profile(DEV_PROFILE)
+Command: aws iam add-role-to-instance-profile --instance-profile-name DEV_PROFILE --role-name DEV_ROLE
+
+Attach the instance profile(DEV_PROFILE) to an EC2 instance
+aws ec2 associate-iam-instance-profile --instance-id i-061d5fd4ea7de442d --iam-instance-profile Name="DEV_PROFILE"
