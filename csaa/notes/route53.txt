@@ -1,0 +1,54 @@
+IPv4: 32 bit field, 4.2bn addresses
+IPv6: 128 bit field, 340 undecillion addresses
+
+Domain registrar: Authority the can assign domain names directly.
+	Domain names are registered with InterNIC, as service of ICANN which enforces the uniqueness of domain names across the internet. Domain name becomes registered in a central database called WhoIS
+
+Start of authority Record(SOA):
+	Name of the server
+	Administrator of the zone
+	Current version of the data file
+	TTL - Length a DNS record is cache(in seconds)
+
+NS Records:
+	Name server record
+	USed of TLD servers to direct traffic to Content DNS server which contains the authoritative DNS records
+
+A Record:
+	Address Record
+	Translate name of the domain to IP address
+	PTR records is just reverse of this
+
+CName:
+	Canonical Name
+	Used to resolve one domain name to another
+	Can't be used for naked domain names, it must be either an A record or an Alias
+
+Alias Records:
+	USed to map resource record sets in your hosted zone to ELBs, CloudFront or S3 buckets
+	Work like CNAME in that you can map one DNS to another target DNS name.
+
+MX Records:
+	Used for emails
+
+Routing Policies:
+	Simple Routing:
+		One record with multiple IP addresses
+		Route53 returns all values to the user in a random order
+	Weighted Routing:
+		Split your traffic based on weights
+	Latency Based Routing:
+		Route traffic based on the lowest network latency
+		Create a latency resource record set for the Amazon EC2 in each region that hosts your website
+	Failover Routing:
+		Active/Passive Setup
+		Route53 will monitor the health of your primary site using health check
+	Geolocation Routing:
+		Choose where traffic will be sent based on the geo location of your users.
+	Geoproximity Routing:
+		Traffic flow only Mode
+		Route traffic based on geographic location of your users and resources
+		Option to choose to route more traffic or less to a given resource by specifyin a bias value
+	MultiValue Answer Routing:
+		Return multiple values such as IP addresses
+		Also lets you check the health of each resource so Route 53 returns only values for healthy resources
