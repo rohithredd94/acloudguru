@@ -1,0 +1,234 @@
+VPC - Logical datacenter in AWS
+Consists of IGWs, Route Tables, Network ACLs, Subnets and SGs
+1 subnet = 1 AZ -> Subnet cannot span multiple AZs
+
+Can also create a Hardware VPN between corp datacenter and VPC in AWS
+
+Network ACLs are stateless
+Security Groups are statefull
+
+The following subnets are not available on public subnets:
+10.0.0.0 - 10.255.255.255 (10/8 prefix)
+172.16.0.0 - 172.31.255.255 (172.16/12 prefix)
+192.168.0.0 - 192.168.255.255 (192.168/16 prefix)
+
+Amazon does not allow /8 anymore. And /28 is the smallest AWS allows.
+
+Lauch instances into a subnet of your choosing
+Assing custom IP ranges in each subnet
+Configure route tables b/w subnets
+Create IG and attach it yo our VPC
+Much better security control over your AWS resources
+Instance security groups
+Subnet Network ACLs
+
+Default vs Custom VPC
+Default:
+	User friendly, deploy EC2 instantly
+	All subnets have route to internet
+	Each instance has both public and private IPs
+
+VPC Peering:
+	Connect one VPC with another via direct network route using private IP
+	Instance behave as if on same network
+	Can peer with other AWS accounts
+	No transitive peering
+	Across regions
+
+Create a VPC:
+	When creating a new VPC what else gets created automatically?
+		No Subnets - Create these manually
+		Yes Route Table
+		No IG - Create it manually - Only 1 IGW attached to 1 VPC
+		Yes Network ACL
+		Yes default SG
+
+	In AWS, /24 only gives 251 addresses, .0, .1, .2, .3 and .255 are reserved
+
+	Always keep main route table in VPC private and create a new one for public subnets
+
+NAT Instances and NAT Gateways:
+	NAT Instances are out of date but still relevant in the exam
+
+	Deploy using community AMIs
+	Disable source/destination checks.
+	Acts as a middleman from EC2 to IGW
+
+	NAT instance is not working
+	Amount of traffic NAT instance can support is dependent on instance size
+
+	NAT Gateways are redundant inside the AZ. Only 1 NAT Gateway in 1 AZ
+	Starts at 5Gbps and scales currently to 45Gbps
+	Not associated with SGs
+	Update route tables after creating NAT Gateway
+	Automatically assigned a public IP address
+
+	Create a NAT gateway in each AZ and configure routing to ensure the resources use the NAT gateway in same AZ.
+	This makes it HA and independent insize an AZ
+
+Network ACLs:
+	Default ACL allows all inbound and outbound traffic
+	100 - Default ipv4
+	101 - Default ipv6
+	AWS recommends using in increments of 100.
+	For a new NACL the default is to deny everything
+	For NACL, need to add both inbound and outbound rules for any required port(s)
+
+	Rules are evaluated in order, and if any rule matches all other rules are ignored
+
+	Whenever a subnet has been created it gets associated with default ACL and one subnet can only be associated with one ACL
+
+	Can block IPs using network ACLs but not SGs
+
+ELBs and VPCs:
+	Minimum of two public subnets to deploy an internet facing load balancer
+
+VPC Flow Logs:
+	ENables yo capture information about the IP traffic going to and from network interfaces in your VPC.
+	3 Levels:
+		VPC
+		Subnet
+		Network Interface Level
+	You cannot enable flow logs for VPC that are peered with your VPC unless the peer VPC is in your account
+	After creating a flow log, configuration cannot be changed
+
+	Traffic generated when talking to Amazon DNS is not logged but using own DNS then logged
+	Windows instances license activation is not monitored
+	Traffic to and from 169.254.169.254 is not monitored
+	DHCP traffic is not monitored
+	Traffic to reserver IP addresses for default VPC is not monitored
+
+Bastion Host:
+	Special purpose computer on a network specifically designed and configured to withstand attacks.
+	This host needs to be hardened as that is the one exposed to attacks.
+	Uses SSH or RDP
+
+Direct Connect:
+	Dedicated network connection from on-prem to AWS
+	Reduce network costs, increase throughput and provide more consistent network experience
+
+	Doesn't traverse the internet, uses a direct connection from on-prem to AWS
+	High Throughput workloads
+	Stable and reliable and secure connection
+
+	Setting up Direct Connect:
+		Create virtual interface in Direct Connect console. This is a public virtual interface
+		In VPC Console, create a Customer Gateway
+		Create a virtual private gateway
+		Attach virtual private gateway to desired VPC
+		Create a new site to site VPC connection
+		Select virtual private gateway and customer gateway
+		Once the VPN is available, set up VPN on customer gateway or firewall
+
+Global Accelerator:
+	Directs traffic to optimal endpoints over the AWS network to improve availability and performance
+	By default gives two static IP addresses for use with accelerator
+	Alternatively you can bring your own IPs
+	Components:
+		Static IPs
+		Accelerator
+			Directs traffic to optimal endpoints over the AWS network to improve availability and performance
+			Includes one or more listeners
+		DNS Name
+			Assigns a default DNS name that points to static IPs given to you
+			Can also use accelerators IPs or DNS name to route traffic to your accelerator or setup DNS to route traffic using own custom domain name
+		Networm Zone
+			Services the static IPs from a unique IP subnet
+			Similar to AWS AZ
+			If you lose one network zone, can use other IP from other network zone
+		Listerner
+			Based on port range and protocol you configure
+			TCP/UDP protocols
+			One or more endpoint groups
+			Associate endpoint groups with listeners by specifying the regions
+		Endpoint Group
+			Associated with specific AWS region
+			Include one or more endpoint
+			Increase or reduce the percentage of traffic that would be otherwise directed to an endpoint group by adjusting something called traffic dial
+		Endpoint
+			NetworkLBs, ALBs, EC2 instances or Elastic IPs
+			Weighted endpoints - Proportion of traffic
+
+VPC Endpoints:
+	Privately connect your VPC to supported AWS services and VPC endpoint services powered by PrivateLink without requireing an internet gateway, NAT device etc.,
+	Instances in your VPC do not required public IP addresses to communicate with resources
+	Does not leave Amazon network
+	Endpoints are virtual devices
+	Horizantally scaled, redundant
+
+	Interface Endpoints:
+		Elastic network interface with a private IP that serves as an entry point for traffic destined for a supported service.
+	Gateway Endpoints:
+		S3 and Dynamo DB
+
+	If a private subnet needs to talk to S3, it has to traverse the internet to reach there.
+
+AWS Private Link:
+	Open up services between VPCs
+	Options:
+		Open it up to internet - Not secure
+		VPC Peering - But need to do this for every VPC
+		Private Link
+			Expose to thousands of customer VPCs
+			No peering, no route tables, no NAT, no IGWs etc
+			NLB on service VPC, ENI on customer VPC
+			Configure IP on NLB on ENI
+
+AWS Transit Gateway:
+	Simplify network topology
+	Single place to connect to everything
+	Transitive peering b/w thousands of VPCs and on-prem
+	Hub and spoke model
+	Work on regional basis, but can have it across multiple regions
+	Across multiple AWS accounts using RAM (Resource Access Manager)
+	Route tables to limit how VPCs talk to one another
+	WOrks with direct connect as well as VPN connections
+	Supports IP Multicast(Not supported by any other AWS service at the moment)
+
+VPN CloudHub:
+	Hub and spoke architecture
+	Single point of contact to connect your VPN structure into
+	Multiple sites each with its own VPN connection, you can use VPN CloubHub to connect those sites together
+	Operates over the internet but all traffic is encrypted
+
+AWS Network Costs:
+	Free Traffic In
+	EC2 to EC2 - Free if using private IP - Same AZ
+	EC2 to EC2 - Another AZ but same region - $0.01/GB
+	EC2 to EC2 - Another region - $0.02/GB
+
+
+Steps to create VPC:
+	Go to VPCs page and click create VPC and configure and create a VPC
+	At this point it creates a VPC, Main Route Table and default NACL and default SG
+	Now create a Internet Gateway and attach the above VPC to it
+	Time to create public and private subnets
+		Go to subnets page and click on create subnets and configure them accordingly
+		In this tutorial we create two subnets, one for public and one for private
+	Now go to route tables page, there will already be a main route table
+	Now create new route tables, one for public and one for private
+	Now first edit the public route table, click on edit routes
+		There will already be one route with destination as VPC CIDR block and target is local
+			This is for anything within the VPC to communicate
+		Add route to the above created IGW
+	Now assign the public subnet to public route table
+	Now associate the private subnet to private route table
+
+	Go to NACLs page, there is already a default NACL with all inbound and outbound access
+	Create a NACL for public access
+		Edit inbound rules and add allow rules for HTTP and SSH from anywhere
+		Edit outbound rules and add allow rules for ports 1024-65536 from anywhere
+		Associate public subnet to this NACL
+	Now create a NACL for private access
+		Edit inbound rules and add SSH rules for SSH from CIDR block of public subnet
+		Edit outbound rules and add allow rules for ports 1024-65536 from anywhere
+		Assocaite private subnet to this NACL
+
+Quiz mistakes:
+	An application LB must be launched into atleast two subnets
+	For Security assessments and pen testing on your own VPC, you conduct without alerting AWS for only 8 services. For others you should request AWS.
+	Egress only IG:
+		Allow VPC based Ipv6 traffic to talk to internet
+		Prevent IPV6 based internet resources to initiate connection to your VPC
+	1 IG per custom VPC
+	EC2 in new subnets can talk to EC2 in other AZs
