@@ -1,0 +1,94 @@
+LB:
+	ALB
+		Balancing HTTP and HTTPS traffic
+		Layer 7 - Application Level
+		Application Aware
+		Intelligent and advanced request routing
+	NLB
+		Balancer TCP traffic
+		Extreme performance
+		Layer 4 - Connection level
+	CLB
+		Balancer HTTP/HTTPS and use Layer 7-specific features, X-Forwarded and sticky sessions
+		Not application aware
+		Can also do strict Layer 4
+		Cheapest option
+	If app stops responding it responds with 504 error(gateway timeout). Needs to troubleshoot and fix it
+	X-Forwarded-For Header:
+		Public IP -> ELB -> EC2 -> By default EC2 will get the IP of the LB
+		But you can still get the public address, look for X-Forwarded-For header which will have the public address
+
+Sticky sessions:
+	Classic LB:
+		Bind user session to particular EC2 instance - What identifies as an user?
+	ALB:
+		Traffic binds at target group level
+
+Cross Zone LB:
+	No Cross Zone:
+		Route53 splits traffic 50-50 between each AZ's LB, but each AZ may not have identical capacity. So, one AZ might be overworked
+	With Cross Zone:
+		Route53 splits traffic 50-50 between each AZ's LB, but LB in AZ with smaller capacity can send requests to AZ with higher capacity. Even distribution no matter the capacity in AZ
+
+Path Patterns:
+	Route traffic based on the path of the URL
+
+Auto Scaling:
+	Groups:
+		Logical grouping of resouces
+	Config Templates:
+		Launch template or config as a config template
+		Info such as AMI ID, instance type, key pair, SGs and block device mapping
+	Scaling Options:
+		Maintain current instance level
+			Performs a periodic health check, if unhealthy terminate instance and spin up a new one
+		Scale manually
+			You specify only the change in max, min or desired capacity of auto scaling group
+		scale based on schedule
+			Performed automatically as a function of time and date
+		Scaled based on demand
+			Lets you define parameters that control the scaling process. Ex: use CPU util as a parameter
+		Use predictive scaling
+			Use AWS auto scaling to scale resources across multiple services
+			Combine predictive scaling and dynamic scaling
+
+Always design for failure
+Always consider the cost element
+Scaling out vs Scaling up
+
+Cloud Formation:
+	Completely scripting your cloud environment
+	Quick has a bunch of CF templates built by AWS solutions architects
+
+Elastic Beanstalk:
+	You can quickly deploy and manage apps in AWS cloud
+	Don't worry about the infra that runs those applications
+	Upload your code and away you go
+	Configure to have capacity provisioning
+
+HA with bastion hosts:
+	Scenario 1: Two EC2 instances(bastions) in public subnet, Two AZ's, use Network Load Balancer - Expensive
+	Scenario 2: EC2 instance(bastion) in public subnet with elastic IP, attach that to auto scaling group - Cheap
+	Scenario 3: Combine scenarios 1 and 2 - Expensive
+
+On Prem Strategies with AWS:
+	Database Migration Service(DMS):
+		Move databases to and from AWS
+		DR tool
+		Works with most popular DBs, Oracle, MySQL, DynamoDB etc.,
+		Supports both homogenous and heterogenous migrations
+	Server Migration Service(SMS):
+		Incremental replication of your on-prem servers in AWS
+		DR tool, multi-site strategy, backup
+	AWS Application Discovery Services:
+		Help enterprise customers plan migration projects by gathering info about on-prem data centers
+		Install AWS App discovery as a VM on vCenter
+		Build server utilization and dependency map
+		Data retained in encrypted format in its own data store, can later be exported as CSV to estimate total cost of ownership running on AWS
+		Data also available in AWS Migration Hub
+	VM Import/Export:
+		Migrate existing applications into EC2
+		DR tool, or second site
+		Export AWS VMs to on prem servers
+	Download Amazon Linux 2 as an ISO
+		Works with VMWare, Hyper-V, KVM, VirtualBox(Oracle) etc.,
